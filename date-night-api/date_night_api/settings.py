@@ -1,6 +1,10 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     openai_api_key: str
 
-settings = Settings()
+    model_config = SettingsConfigDict(env_file=".env")
+
+
+def get_settings() -> Settings:
+    return Settings()

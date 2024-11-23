@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./date-night-api
+      dockerfile: Dockerfile
+    container_name: date-night-api
+    ports:
+      - "8000:8000" # Map FastAPI port to localhost
+    volumes:
+      - ./date-night-api:/app # Optional: for local development
+    environment:
+      - PYTHONUNBUFFERED=1 # Ensure Python logs are flushed
+
+  client:
+    build:
+      context: ./date-night-client
+      dockerfile: Dockerfile
+    container_name: date-night-client
+    ports:
+      - "3000:3000" # Map Next.js port to localhost
+    depends_on:
+      - api # Ensure the API service starts before the client
+    volumes:
+      - ./date-night-client:/app # Optional: for local development
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000 # Set FastAPI URL for the client
+    command: npm run dev # Use the Next.js development server
+
+networks:
+  default:
+    driver: bridge
