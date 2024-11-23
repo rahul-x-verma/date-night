@@ -34,6 +34,3 @@ async def chat(request: ChatRequest):
     async with Chatbot() as chatbot:
         response = await chatbot.ainvoke(message=request.message, thread_id=thread_id)
         return {"response": response.content, "thread_id": thread_id}
-
-
-

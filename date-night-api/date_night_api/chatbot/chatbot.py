@@ -2,13 +2,12 @@ import asyncio
 
 from typing import Optional
 import uuid
-from date_night_api import settings
+from date_night_api.settings import get_settings
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import START, MessagesState, StateGraph
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, ToolMessage
 from date_night_api.restaurant_finder.restaurant_finder import find_restaurant
-
 
 
 class Chatbot:
@@ -21,6 +20,7 @@ class Chatbot:
         return cls._instance
 
     def __init__(self):
+        settings = get_settings()
         self.model = ChatOpenAI(model='gpt-4o-mini', api_key=settings.openai_api_key)
         self.model = self.model.bind_tools([find_restaurant])
         self.graph = StateGraph(state_schema=MessagesState)
@@ -29,6 +29,7 @@ class Chatbot:
         self.memory = None
         self.compiled_graph = None
         self._initialized = True
+
     
     # TODO: This is pretty weird. We should instead use a context manager for the FastAPI app.
     async def __aenter__(self):
