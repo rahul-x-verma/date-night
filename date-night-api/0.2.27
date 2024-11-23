@@ -1,0 +1,30 @@
+Using version ^0.3.19 for langchain-core
+Using version ^0.2.52 for langgraph
+
+Updating dependencies
+Resolving dependencies...
+
+Package operations: 20 installs, 0 updates, 0 removals
+
+  - Installing certifi (2024.8.30)
+  - Installing charset-normalizer (3.4.0)
+  - Installing urllib3 (2.2.3)
+  - Installing httpcore (1.0.7)
+  - Installing requests (2.32.3)
+  - Installing httpx (0.27.2)
+  - Installing jsonpointer (3.0.0)
+  - Installing requests-toolbelt (1.0.0)
+  - Installing orjson (3.10.11)
+  - Installing jsonpatch (1.33)
+  - Installing packaging (24.2)
+  - Installing pyyaml (6.0.2)
+  - Installing langsmith (0.1.143)
+  - Installing tenacity (9.0.0)
+  - Installing httpx-sse (0.4.0)
+  - Installing langchain-core (0.3.19)
+  - Installing msgpack (1.1.0)
+  - Installing langgraph-checkpoint (2.0.5)
+  - Installing langgraph-sdk (0.1.36)
+  - Installing langgraph (0.2.52)
+
+Writing lock file
