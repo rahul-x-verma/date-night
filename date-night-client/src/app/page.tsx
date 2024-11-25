@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Container,
   Paper,
@@ -16,47 +16,68 @@ export default function Home() {
   const [message, setMessage] = useState('')
   const [chatHistory, setChatHistory] = useState<Array<{role: string, content: string}>>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [socket, setSocket] = useState<WebSocket | null>(null)
   const [threadId, setThreadId] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Initialize WebSocket connection
+    const ws = new WebSocket('ws://localhost:8000/ws/chat')
+    
+    ws.onopen = () => {
+      console.log('Connected to WebSocket')
+    }
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      if (data.thread_id) {
+        setThreadId(data.thread_id)
+      }
+      setChatHistory(prev => [...prev, { role: 'assistant', content: data.response }])
+      setIsLoading(false)
+      setMessage('')
+    }
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error)
+      setIsLoading(false)
+    }
+
+    ws.onclose = () => {
+      console.log('Disconnected from WebSocket')
+    }
+
+    setSocket(ws)
+
+    // Cleanup on unmount
+    return () => {
+      ws.close()
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!message.trim()) return
+    if (!message.trim() || !socket) return
 
     setIsLoading(true)
     setChatHistory(prev => [...prev, { role: 'user', content: message }])
     
     try {
-      const response = await fetch('http://localhost:8000/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          message,
-          thread_id: threadId
-        }),
-      })
-      
-      const data = await response.json()
-      if (data.thread_id) {
-        setThreadId(data.thread_id)
-      }
-      setChatHistory(prev => [...prev, { role: 'assistant', content: data.response }])
-    } catch (error) 
-    {
+      socket.send(JSON.stringify({ 
+        message,
+        thread_id: threadId
+      }))
+    } catch (error) {
       console.error('Error:', error)
-    } finally {
       setIsLoading(false)
-      setMessage('')
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
+      e.preventDefault()
+      handleSubmit(e)
     }
-  };
+  }
 
   return (
     <Container maxWidth="md" sx={{ py: 4, height: '100vh', display: 'flex', flexDirection: 'column' }}>

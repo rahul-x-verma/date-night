@@ -1,7 +1,3 @@
-import asyncio
-
-from typing import Optional
-import uuid
 from date_night_api.settings import get_settings
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import START, MessagesState, StateGraph
@@ -46,18 +42,21 @@ class Chatbot:
     async def _call_model(self, state: MessagesState):
         response = await self.model.ainvoke(state['messages'])
         if response.tool_calls:
-            tool_messages = list()
-            for call in response.tool_calls:
-                tool_input = call['args']['cuisine']
-                tool_response = find_restaurant(tool_input)
-                tool_messages.append(ToolMessage(tool_response, tool_call_id=call['id']))
-            messages = state['messages'] + [response] + tool_messages
-            response = await self.model.ainvoke(messages)
-            return {'messages': response}
+            response = await self._execute_tools(state['messages'], response)
         return {'messages': response}
+
+    async def _execute_tools(self, messages, response):
+        tool_messages = []
+        for call in response.tool_calls:
+            tool_input = call['args']['cuisine']
+            tool_response = find_restaurant(tool_input)
+            tool_messages.append(ToolMessage(tool_response, tool_call_id=call['id']))
+        
+        messages = messages + [response] + tool_messages
+        return await self.model.ainvoke(messages)
 
     async def ainvoke(self, message: str, thread_id: str):
         config = {'configurable': {'thread_id': thread_id}}
         resp = await self.compiled_graph.ainvoke({'messages': [HumanMessage(content=message)]}, config)
-        return resp['messages'][-1]
+        return resp['messages'][-1].content
         

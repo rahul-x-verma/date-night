@@ -1,5 +1,5 @@
 import uuid
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -20,17 +20,31 @@ def health():
     return None, 200
 
 
-class ChatRequest(BaseModel):
-    message: str
-    thread_id: Optional[str] = None
-
 
 @app.post("/chat")
-async def chat(request: ChatRequest):
-    if not request.thread_id:
-        thread_id = str(uuid.uuid4())
-    else:
-        thread_id = request.thread_id
-    async with Chatbot() as chatbot:
-        response = await chatbot.ainvoke(message=request.message, thread_id=thread_id)
-        return {"response": response.content, "thread_id": thread_id}
+@app.websocket("/ws/chat")
+async def websocket_chat(websocket: WebSocket):
+    await websocket.accept()
+    
+    try:
+        while True:
+            data = await websocket.receive_json()
+            message = data.get("message")
+            thread_id = data.get("thread_id")
+
+            if not thread_id:
+                thread_id = str(uuid.uuid4())
+
+            async with Chatbot() as chatbot:
+                response = await chatbot.ainvoke(message=message, thread_id=thread_id)
+                
+                # Send response back to client
+                await websocket.send_json({
+                    "response": response,
+                    "thread_id": thread_id
+                })
+
+                
+    except WebSocketDisconnect:
+        pass
+
