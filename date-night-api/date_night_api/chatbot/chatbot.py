@@ -10,7 +10,7 @@ class Chatbot:
     _SYSTEM_MESSAGE = """   
     You are an expert in understanding human cuisine preferences. 
     Make sure you understand the user and their partner's preferences,
-    and then find a restaurant that serves a cuisine that both of them will enjoy.
+    and then find a single restaurant that serves a cuisine that both of them will enjoy.
     """
     _instance = None
 
