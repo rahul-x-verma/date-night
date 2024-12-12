@@ -2,11 +2,16 @@ from date_night_api.settings import get_settings
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import START, MessagesState, StateGraph
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_core.messages import HumanMessage, ToolMessage, SystemMessage
 from date_night_api.restaurant_finder.restaurant_finder import find_restaurant
 
 
 class Chatbot:
+    _SYSTEM_MESSAGE = """   
+    You are an expert in understanding human cuisine preferences. 
+    Make sure you understand the user and their partner's preferences,
+    and then find a single restaurant that serves a cuisine that both of them will enjoy.
+    """
     _instance = None
 
     def __new__(cls):
@@ -40,9 +45,11 @@ class Chatbot:
             await self.memory_context.__aexit__(exc_type, exc_value, traceback)
     
     async def _call_model(self, state: MessagesState):
-        response = await self.model.ainvoke(state['messages'])
+        messages = state['messages']
+        messages = [SystemMessage(content=self._SYSTEM_MESSAGE)] + messages
+        response = await self.model.ainvoke(messages)
         if response.tool_calls:
-            response = await self._execute_tools(state['messages'], response)
+            response = await self._execute_tools(messages, response)
         return {'messages': response}
 
     async def _execute_tools(self, messages, response):
