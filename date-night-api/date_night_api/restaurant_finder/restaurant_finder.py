@@ -1,3 +1,4 @@
+from date_night_api.settings import get_settings
 import requests
 import os
 from langchain_core.tools import tool
@@ -11,10 +12,9 @@ def find_restaurant(cuisine: str) -> str:
     Args:
         cuisine: The type of cuisine to search for.
     """
-    
-    load_dotenv() 
-    api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-    address = os.getenv("ADDRESS")
+    settings = get_settings()
+    api_key = settings.google_maps_api_key
+    address = settings.address
     lat, long = get_coordinates(api_key, address)
     restaurant = find_restaurants(api_key, lat, long, cuisine)
     return f'{restaurant['name']} at {restaurant['vicinity']}'
